@@ -58,3 +58,6 @@ def get_regime():
         "confidence": result.confidence,
         "drivers": result.drivers,
     }
+@app.get("/health")
+def health():
+    return {"status": "ok"}
