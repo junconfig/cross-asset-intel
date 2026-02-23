@@ -1,34 +1,36 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
+
 from app.api.schemas import RegimeResponse, HealthResponse
 from app.cache import SimpleCache
+from app.core.logger import get_logger
 from app.services.data_fetcher import get_asset_data
 from app.services.regime_engine import calculate_regime
 
 router = APIRouter()
-
 cache = SimpleCache()
+logger = get_logger("api")
 
 
 def fetch_all_data():
-    print("Fetching BTC...")
+    logger.info("Fetching BTC...")
     btc = get_asset_data("BTC-USD")
 
-    print("Fetching SPY...")
+    logger.info("Fetching SPY...")
     spy = get_asset_data("SPY")
 
-    print("Fetching VIX...")
+    logger.info("Fetching VIX...")
     vix = get_asset_data("^VIX")
 
-    print("Fetching DXY...")
+    logger.info("Fetching DXY...")
     dxy = get_asset_data("DX-Y.NYB")
 
-    print("Fetching TNX...")
+    logger.info("Fetching TNX...")
     tnx = get_asset_data("^TNX")
 
-    print("Fetching GOLD...")
+    logger.info("Fetching GOLD...")
     gold = get_asset_data("GC=F")
 
-    print("Done fetching all data.")
+    logger.info("Done fetching all data.")
     return {
         "BTC": btc,
         "SPY": spy,
@@ -41,23 +43,30 @@ def fetch_all_data():
 
 @router.get("/regime", response_model=RegimeResponse)
 def get_regime():
-    key = "all_market_data"
+    try:
+        key = "all_market_data"
 
-    data = cache.get(key)
+        data = cache.get(key)
 
-    if data is None:
-        print("Fetching fresh market data...")
-        data = fetch_all_data()
-        cache.set(key, data, ttl_seconds=300)
+        if data is None:
+            logger.info("Cache miss. Fetching fresh market data...")
+            data = fetch_all_data()
+            cache.set(key, data, ttl_seconds=300)
+        else:
+            logger.info("Cache hit. Using cached market data.")
 
-    result = calculate_regime(data)
+        result = calculate_regime(data)
 
-    return {
-        "score": result.score,
-        "regime": result.regime,
-        "confidence": result.confidence,
-        "drivers": result.drivers,
-    }
+        return {
+            "score": result.score,
+            "regime": result.regime,
+            "confidence": result.confidence,
+            "drivers": result.drivers,
+        }
+
+    except Exception as e:
+        logger.exception("Error in /regime")
+        raise HTTPException(status_code=500, detail=f"Regime calculation failed: {e}")
 
 
 @router.get("/health", response_model=HealthResponse)
