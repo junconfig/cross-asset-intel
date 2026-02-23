@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-
+from app.api.schemas import RegimeResponse, HealthResponse
 from app.cache import SimpleCache
 from app.data_fetcher import get_asset_data
 from app.regime_engine import calculate_regime
@@ -39,7 +39,7 @@ def fetch_all_data():
     }
 
 
-@router.get("/regime")
+@router.get("/regime", response_model=RegimeResponse)
 def get_regime():
     key = "all_market_data"
 
@@ -60,6 +60,6 @@ def get_regime():
     }
 
 
-@router.get("/health")
+@router.get("/health", response_model=HealthResponse)
 def health():
     return {"status": "ok"}
