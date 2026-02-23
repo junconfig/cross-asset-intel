@@ -1,5 +1,5 @@
-from app.data_fetcher import get_asset_data
-from app.regime_engine import calculate_regime
+from app.services.data_fetcher import get_asset_data
+from app.services.regime_engine import calculate_regime
 
 
 def main():
