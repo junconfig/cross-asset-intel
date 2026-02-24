@@ -5,6 +5,7 @@ from app.cache import SimpleCache
 from app.core.logger import get_logger
 from app.services.data_fetcher import get_asset_data
 from app.services.regime_engine import calculate_regime
+from app.core.config import get_cache_ttl_seconds
 
 router = APIRouter()
 cache = SimpleCache()
@@ -51,7 +52,7 @@ def get_regime():
         if data is None:
             logger.info("Cache miss. Fetching fresh market data...")
             data = fetch_all_data()
-            cache.set(key, data, ttl_seconds=300)
+            cache.set(key, data, ttl_seconds=get_cache_ttl_seconds())
         else:
             logger.info("Cache hit. Using cached market data.")
 
